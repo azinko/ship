@@ -1,32 +1,34 @@
-import io from 'socket.io-client';
+import { HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr';
 
 import config from 'config';
 
-const socket = io(config.apiUrl, {
-  transports: ['websocket'],
-  autoConnect: false,
-});
+const connection = new HubConnectionBuilder()
+  .withUrl(config.wsUrl)
+  .withAutomaticReconnect()
+  .build();
 
 export const connect = async () => {
-  socket.open();
+  await connection.start();
 };
 
 export const disconnect = () => {
-  socket.disconnect();
+  connection.stop();
 };
 
 export const emit = (event, ...args) => {
-  socket.emit(event, ...args);
+  connection.invoke(event, ...args);
 };
 
 export const on = (event, callback) => {
-  socket.on(event, callback);
+  connection.on(event, callback);
 };
 
 export const off = (event, callback) => {
-  socket.off(event, callback);
+  connection.off(event, callback);
 };
 
-export const connected = () => socket.connected;
+export const connected = () =>
+  connection.state === HubConnectionState.Connected;
 
-export const disconnected = () => socket.disconnected;
+export const disconnected = () =>
+  connection.state !== HubConnectionState.Connected;
